@@ -1,0 +1,24 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Virtual environment files
+venv/
+ENV/
+
+# Scraper output, leads, and worker profiles
+leads/
+scraping_profile*/
+scraping_profile_worker_1/
+scraping_profile_worker_2/
+scraping_profile_worker_3/
+scraping_profile_worker_4/
+scraping_profile_worker_5/
+scraping_profile_worker_6/
+scraping_profile_worker_7/
+scraping_profile_worker_8/
+scraping_profile_worker_9/
+scraping_profile_worker_10/
+
+# Unfinished script file
+unfinished.py

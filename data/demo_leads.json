@@ -1,0 +1,57 @@
+[
+    {
+        "name": "funeral_homes_in_burlington_vermont",
+        "leads":[
+                    {
+                        "Business Name": "Stephen C. Gregory and Son Cremation Service",
+                        "Rating": "5.0",
+                        "Reviews Count": "N/A",
+                        "Address": "472 Meadowland Dr, South Burlington, VT 05403, United States",
+                        "Hours": "N/A",
+                        "Phone": "+1 802-985-3523",
+                        "Website": "gregorycremation.com",
+                        "Plus Code": "CRQX+6W South Burlington, Vermont, USA"
+                    },
+                    {
+                        "Business Name": "Stephen C. Gregory and Son Cremation Service",
+                        "Rating": "5.0",
+                        "Reviews Count": "N/A",
+                        "Address": "472 Meadowland Dr, South Burlington, VT 05403, United States",
+                        "Hours": "N/A",
+                        "Phone": "+1 802-985-3523",
+                        "Website": "gregorycremation.com",
+                        "Plus Code": "CRQX+6W South Burlington, Vermont, USA"
+                    }
+                ]
+
+    
+    },
+    {
+        "name of second query participating in this batch": "some other file name",
+        "leads":[
+                    {
+                    "Business Name": "Stephen C. Gregory and Son Cremation Service",
+                    "Rating": "5.0",
+                    "Reviews Count": "N/A",
+                    "Address": "472 Meadowland Dr, South Burlington, VT 05403, United States",
+                    "Hours": "N/A",
+                    "Phone": "+1 802-985-3523",
+                    "Website": "gregorycremation.com",
+                    "Plus Code": "CRQX+6W South Burlington, Vermont, USA"
+                    },
+                    {
+                    "Business Name": "Stephen C. Gregory and Son Cremation Service",
+                    "Rating": "5.0",
+                    "Reviews Count": "N/A",
+                    "Address": "472 Meadowland Dr, South Burlington, VT 05403, United States",
+                    "Hours": "N/A",
+                    "Phone": "+1 802-985-3523",
+                    "Website": "gregorycremation.com",
+                    "Plus Code": "CRQX+6W South Burlington, Vermont, USA"
+                    }
+
+
+                ]
+    }            
+    
+]
