@@ -6,8 +6,8 @@ from google.oauth2.service_account import Credentials
 import ollama
 
 # ==================== CONFIGURATION ====================
-SERVICE_ACCOUNT_FILE = 'service_account.json'
-SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1uRAt9SwWqKMWqtoN0TGgeAwvLkSJMK86ItnbJhiiSgs/edit?usp=sharing'
+SERVICE_ACCOUNT_FILE = './reviews-processor/service_account.json'
+SPREADSHEET_URL = ''
 MODEL_NAME = 'llama3.2'
 CPU_THREADS = 2              # Restricts Ollama to 2 CPU threads to prevent 100% CPU spikes
 PAUSE_BETWEEN_REVIEWS = 0.5  # Small delay between individual reviews
@@ -55,7 +55,7 @@ Review:
             messages=messages,
             options={
                 'temperature': 0.0,
-                'num_thread': CPU_THREADS  # Throttles CPU usage
+                'num_thread': CPU_THREADS  
             }
         )
         
@@ -94,8 +94,24 @@ def parse_reviews_field(reviews_raw):
     
     return [r.strip() for r in reviews_list if r.strip()]
 
+def safe_batch_update(sheet, updates, retries=3):
+    """Writes updates to Google Sheets with automatic retry on dropped connections."""
+    if not updates:
+        return
+    for attempt in range(1, retries + 1):
+        try:
+            sheet.batch_update(updates)
+            return
+        except Exception as e:
+            print(f"    [Network Warning] Google Sheets dropped connection (Attempt {attempt}/{retries}): {e}")
+            if attempt < retries:
+                time.sleep(3 * attempt)  # Wait 3s, 6s before retrying
+            else:
+                print("    [ERROR] Failed to write batch after multiple retries.")
+                raise
+
 def process_all_worksheets():
-    """Iterates through every worksheet, lead, and review with granular tracking prints."""
+    """Iterates through every worksheet with incremental saves and connection resilience."""
     spreadsheet = get_google_spreadsheet()
     worksheets = spreadsheet.worksheets()
 
@@ -122,7 +138,6 @@ def process_all_worksheets():
             owner_col_idx = headers.index('Owner Name') + 1
 
         sheet_updates = []
-        sheet_leads_success = 0
 
         for idx, row in enumerate(rows, start=2):
             current_owner = row.get('Owner Name')
@@ -140,43 +155,46 @@ def process_all_worksheets():
             print(f"\n  -> Inspecting Lead [{idx}]: '{business_name}' ({len(reviews_list)} reviews total)")
 
             found_owner = None
-            # Iterate review by review to check precisely
             for rev_idx, review in enumerate(reviews_list, start=1):
                 print(f"     [Review {rev_idx}/{len(reviews_list)}] Checking review text...", end="\r")
-                extracted_name = extract_owner_single_review(review)
                 
-                time.sleep(PAUSE_BETWEEN_REVIEWS) # Throttle between individual reviews
+                extracted_name = extract_owner_single_review(review)
+                time.sleep(PAUSE_BETWEEN_REVIEWS)
 
                 if extracted_name:
                     found_owner = extracted_name
                     print(f"\n     [MATCH FOUND!] Review {rev_idx} revealed owner/doctor: --> {found_owner}")
-                    break  # Early exit as soon as name is found for this lead
+                    break
 
             if found_owner:
-                sheet_leads_success += 1
                 total_leads_updated += 1
-                print(f"  [SUCCESS] Lead [{idx}] '{business_name}' successfully assigned Owner Name: '{found_owner}'")
-                print(f"  [STATUS] Total leads successfully extracted so far in this session: {total_leads_updated}")
+                print(f"  [SUCCESS] Lead [{idx}] '{business_name}' -> '{found_owner}'")
+                print(f"  [STATUS] Total leads extracted in this session: {total_leads_updated}")
                 
                 sheet_updates.append({
                     'range': gspread.utils.rowcol_to_a1(idx, owner_col_idx),
                     'values': [[found_owner]]
                 })
+
+                # Save to Google Sheets every 10 matches to prevent connection timeouts & data loss
+                if len(sheet_updates) >= 10:
+                    safe_batch_update(sheet, sheet_updates)
+                    print(f"  [SAVED] Synced 10 records to Google Sheets.")
+                    sheet_updates.clear()
             else:
                 print(f"  [NO MATCH] Lead [{idx}] '{business_name}': Scanned all reviews, no name detected.")
 
-            # Hardware cooling pause between leads
             time.sleep(PAUSE_BETWEEN_LEADS)
 
-        # Batch update the worksheet once finished
+        # Flush any remaining updates for the current worksheet
         if sheet_updates:
-            sheet.batch_update(sheet_updates)
-            print(f"\n[SHEET COMPLETE] Successfully batch-updated {len(sheet_updates)} record(s) in sheet '{sheet.title}'.")
+            safe_batch_update(sheet, sheet_updates)
+            print(f"\n[SHEET COMPLETE] Synced remaining {len(sheet_updates)} record(s) in '{sheet.title}'.")
         else:
-            print(f"\n[SHEET COMPLETE] No new names found to update in sheet '{sheet.title}'.")
+            print(f"\n[SHEET COMPLETE] Finished '{sheet.title}'.")
 
     print(f"\n==================================================")
-    print(f"JOB FINISHED! Successfully extracted owners for {total_leads_updated} total leads across all sheets.")
+    print(f"JOB FINISHED! Successfully extracted owners for {total_leads_updated} total leads.")
     print(f"==================================================")
 
 if __name__ == "__main__":
