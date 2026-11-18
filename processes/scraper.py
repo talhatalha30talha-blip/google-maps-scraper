@@ -52,7 +52,7 @@ class GoogleMapsScraper:
                     "--no-sandbox",
                     "--disable-dev-shm-usage",
                     "--disable-infobars",
-                    "--disable-extensions-except=" + worker_profile_dir,
+                    "--disable-extensions-disabled",
                     "--enable-automation=false"
                 ],
                 viewport={"width": 1920, "height": 1080},
